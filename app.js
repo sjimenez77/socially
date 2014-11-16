@@ -1,11 +1,29 @@
 /* Cloud9 config */
 /*****************/
-/* globals Meteor angular Parties Mongo */
+/* globals Meteor angular Parties Mongo UiRouter */
 
 Parties = new Mongo.Collection("parties");
 
 if (Meteor.isClient) {
-    angular.module('socially',['angular-meteor']);
+    angular.module('socially',['angular-meteor', 'ui.router']);
+    angular.module("socially").config(['$urlRouterProvider', '$stateProvider', '$locationProvider', function($urlRouterProvider, $stateProvider, $locationProvider){
+
+        $locationProvider.html5Mode(true);
+    
+        $stateProvider
+            .state('parties', {
+                url: '/parties',
+                template: UiRouter.template('parties-list.html'),
+                controller: 'PartiesListCtrl'
+            })
+            .state('partyDetails', {
+                url: '/parties/:partyId',
+                template: UiRouter.template('party-details.html'),
+                controller: 'PartyDetailsCtrl'
+            });
+    
+            $urlRouterProvider.otherwise("/parties");
+    }]);
 
     Meteor.startup(function () {
         angular.bootstrap(document, ['socially']);
@@ -18,6 +36,11 @@ if (Meteor.isClient) {
             $scope.parties.splice( $scope.parties.indexOf(party), 1 );
         };
         
+    }]);
+    
+    angular.module("socially").controller("PartyDetailsCtrl", ['$scope', '$stateParams', '$collection', function($scope, $stateParams, $collection){
+        $scope.partyId = $stateParams.partyId;
+        $collection(Parties).bindOne($scope, 'party', $stateParams.partyId, true, true);
     }]);
 }
 
